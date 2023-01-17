@@ -9,8 +9,8 @@ step1 Todo 메뉴 추가
 
 
 step2 Todo 메뉴 수정
-[] 메뉴의 수정 버튼 클릭 이벤트를 받고 , 메뉴 수정하는 모달창이 뜬다
-[] 모달창에서 신규 메뉴명을 입력 받고 , 확인 버튼을 누르면 메뉴가 수정 된다.
+[*] 메뉴의 수정 버튼 클릭 이벤트를 받고 , 메뉴 수정하는 모달창이 뜬다
+[*] 모달창에서 신규 메뉴명을 입력 받고 , 확인 버튼을 누르면 메뉴가 수정 된다.
 
 step3 Todo 메뉴 삭제
 [] 메뉴삭제 버튼 클릭 이벤트를 받고 , 메뉴 삭제 컨펌 모달창이 뜬다
@@ -25,13 +25,14 @@ const menuCount = document.querySelector('.menu-count');
 
 
 
+
 const app = function() {
     //form 태그가 자동으로 전송 되는 것을 막아 준다
     menuForm.addEventListener('submit', (event) => {
         event.preventDefault();
     })
     //엔터나 클릭이 됐을 때 실행될 메뉴 리스트 내용을 담은 함수
-    const addEspressoMenuList = () => {
+    const addMenuList = () => {
         const userInputValue = userInput.value;
         const menuList = (value) => {
             return `
@@ -65,16 +66,26 @@ const app = function() {
     //Enter 키를 눌렀을 때 userInput 에 입력된 value 를 출력
     userInput.addEventListener('keypress' , (event) => {
         if(event.key === 'Enter'){
-            addEspressoMenuList(); 
+            addMenuList(); 
         }
     });
 
     //submit 버튼을 클릭 했을 때 userInput 에 입력된 value 를 출력 
     userSubmitButton.addEventListener('click' , (event) => {
         if(userInput){
-            addEspressoMenuList();
+            addMenuList();
         }
     });
+    
+    //메뉴 이름 수정,삭제 하는 함수 . 이벤트 위임을 통해 수정 버튼 기능 구현
+    espressoMenuList.addEventListener('click' , (event) => {
+        const menuName = event.target.closest('li').querySelector('.menu-name');
+        if(event.target.classList.contains('menu-edit-button')){
+            const modifiedName = prompt('메뉴 수정' , menuName.innerText);
+            menuName.innerText = modifiedName;
+            //console.log(event.target);
+        }
+    })
 }
 
 app();
