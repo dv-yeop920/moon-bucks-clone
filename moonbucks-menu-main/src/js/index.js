@@ -13,9 +13,9 @@ step2 Todo 메뉴 수정
 [*] 모달창에서 신규 메뉴명을 입력 받고 , 확인 버튼을 누르면 메뉴가 수정 된다.
 
 step3 Todo 메뉴 삭제
-[] 메뉴삭제 버튼 클릭 이벤트를 받고 , 메뉴 삭제 컨펌 모달창이 뜬다
-[] 확인 버튼을 클릭 하면 메뉴가 삭제 된다
-[] 총 메뉴 갯수를 count 하여 수정된 메뉴 갯수를 상태에 보여 준다. */
+[*] 메뉴삭제 버튼 클릭 이벤트를 받고 , 메뉴 삭제 컨펌 모달창이 뜬다
+[*] 확인 버튼을 클릭 하면 메뉴가 삭제 된다
+[*] 총 메뉴 갯수를 count 하여 수정된 메뉴 갯수를 상태에 보여 준다. */
 
 const userInput = document.querySelector('#espresso-menu-name');
 const userSubmitButton = document.querySelector('#espresso-menu-submit-button');
@@ -31,9 +31,17 @@ const app = function() {
     menuForm.addEventListener('submit', (event) => {
         event.preventDefault();
     })
+    
+    //수정 또는 삭제 했을 때 메뉴 갯수를 카운터 해주는 함수
+    const menuCounter = () => {
+        const menuCounted = espressoMenuList.querySelectorAll('li').length;
+        menuCount.innerText = `총 ${menuCounted}개`;
+    }
+
     //엔터나 클릭이 됐을 때 실행될 메뉴 리스트 내용을 담은 함수
     const addMenuList = () => {
         const userInputValue = userInput.value;
+
         const menuList = (value) => {
             return `
             <li class="menu-list-item d-flex items-center py-2">
@@ -56,11 +64,10 @@ const app = function() {
         if(userInputValue === ''){
             return alert('메뉴 이름을 작성해 주세요!');
         }
-        console.log(menuList(userInputValue));
+        //console.log(menuList(userInputValue));
         espressoMenuList.insertAdjacentHTML("beforeend",menuList(userInputValue));
         //리스트를 작성할 때 마다 espressoMenuList에 있는 <li> 노드의 갯수 즉 , length 를 불러와 변수에 할당 후 갯수를 카운트 해준다.
-        const menuCounter = espressoMenuList.querySelectorAll('li').length;
-        menuCount.innerText = `총 ${menuCounter}개`;
+        menuCounter();
         userInput.value = '';
     }
     //Enter 키를 눌렀을 때 userInput 에 입력된 value 를 출력
@@ -77,13 +84,19 @@ const app = function() {
         }
     });
     
-    //메뉴 이름 수정,삭제 하는 함수 . 이벤트 위임을 통해 수정 버튼 기능 구현
+    //메뉴 이름 수정,삭제 하는 함수 . 이벤트 위임을 통해 수정.삭제 버튼 기능 구현
     espressoMenuList.addEventListener('click' , (event) => {
         const menuName = event.target.closest('li').querySelector('.menu-name');
+        const menuTag = event.target.closest('li');
         if(event.target.classList.contains('menu-edit-button')){
             const modifiedName = prompt('메뉴 수정' , menuName.innerText);
             menuName.innerText = modifiedName;
             //console.log(event.target);
+        }else if(event.target.classList.contains('menu-remove-button')){
+            if(confirm('정말 삭제 하시겠습니까?')){
+                menuTag.remove();
+                menuCounter();
+            }
         }
     })
 }
