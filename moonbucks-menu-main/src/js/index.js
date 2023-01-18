@@ -80,7 +80,12 @@ const menuCount = document.querySelector('.menu-count');
     
         if(event.target.classList.contains('menu-edit-button')){
             const modifiedName = prompt('메뉴 수정' , menuName.innerText);
-            menuName.innerText = modifiedName;
+            
+            if(modifiedName){
+                return menuName.innerText = modifiedName;
+            }else{
+                menuName.innerText = menuName.innerText;
+            }
             //console.log(event.target);
         }
     }
