@@ -3,7 +3,6 @@ step1 Todo 메뉴 추가
 [*] 메뉴의 이름을 입력 받고 엔터 키를 치면 메뉴가 추가 된다
 [*] 메뉴의 이름을 입력 받고 확인 버튼을 누르면 메뉴가 추가 된다
 [*] 추가 되는 메뉴의 마크업은 <ul id="espresso-menu-list" class="mt-3 pl-0"><ul/> 안에 삽입 되야 한다
-[*] 총 메뉴 갯수를 count 하여 상단에 보여 준다 => count total
 [*] 메뉴가 추가 되고 나면 , input은 반드시 초기화 된다
 [*] 사용자 입력값이 빈 값이라면 추가 되지 않는다.
 
@@ -15,18 +14,23 @@ step2 Todo 메뉴 수정
 step3 Todo 메뉴 삭제
 [*] 메뉴삭제 버튼 클릭 이벤트를 받고 , 메뉴 삭제 컨펌 모달창이 뜬다
 [*] 확인 버튼을 클릭 하면 메뉴가 삭제 된다
-[*] 총 메뉴 갯수를 count 하여 수정된 메뉴 갯수를 상태에 보여 준다. */
 
-const userInput = document.querySelector('#espresso-menu-name');
-const userSubmitButton = document.querySelector('#espresso-menu-submit-button');
-const menuForm = document.querySelector('#espresso-menu-form');
-const espressoMenuList = document.querySelector('#espresso-menu-list');
-const menuCount = document.querySelector('.menu-count');
-
+step4 Todo 메뉴 count
+[*] 총 메뉴 갯수를 count 하여 상단에 보여 준다 => count total
+*/
 
 
 
 const app = function() {
+    //html에 접근해서 태그들 변수에 할당 해서 쓰기
+const menuForm = document.querySelector('#espresso-menu-form');
+const userInput = document.querySelector('#espresso-menu-name');
+const userSubmitButton = document.querySelector('#espresso-menu-submit-button');
+const espressoMenuList = document.querySelector('#espresso-menu-list');
+
+
+const menuCount = document.querySelector('.menu-count');
+
     //form 태그가 자동으로 전송 되는 것을 막아 준다
     menuForm.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -41,7 +45,7 @@ const app = function() {
     //엔터나 클릭이 됐을 때 실행될 메뉴 리스트 내용을 담은 함수
     const addMenuList = () => {
         const userInputValue = userInput.value;
-
+        //메뉴 추가를 할때 실행할 함수
         const menuList = (value) => {
             return `
             <li class="menu-list-item d-flex items-center py-2">
@@ -70,6 +74,26 @@ const app = function() {
         menuCounter();
         userInput.value = '';
     }
+
+    const updateMenuName = (event) => {
+        const menuName = event.target.closest('li').querySelector('.menu-name');
+    
+        if(event.target.classList.contains('menu-edit-button')){
+            const modifiedName = prompt('메뉴 수정' , menuName.innerText);
+            menuName.innerText = modifiedName;
+            //console.log(event.target);
+        }
+    }
+
+    const removeMenuName = (event) => {
+        const menuTag = event.target.closest('li');
+
+        if(confirm('정말 삭제 하시겠습니까?')){
+            menuTag.remove();
+            menuCounter();
+        }
+    }
+
     //Enter 키를 눌렀을 때 userInput 에 입력된 value 를 출력
     userInput.addEventListener('keypress' , (event) => {
         if(event.key === 'Enter'){
@@ -78,25 +102,18 @@ const app = function() {
     });
 
     //submit 버튼을 클릭 했을 때 userInput 에 입력된 value 를 출력 
-    userSubmitButton.addEventListener('click' , (event) => {
-        if(userInput){
-            addMenuList();
-        }
-    });
+    userSubmitButton.addEventListener('click' ,  addMenuList);
+//if 문 수정
+    
     
     //메뉴 이름 수정,삭제 하는 함수 . 이벤트 위임을 통해 수정.삭제 버튼 기능 구현
     espressoMenuList.addEventListener('click' , (event) => {
-        const menuName = event.target.closest('li').querySelector('.menu-name');
-        const menuTag = event.target.closest('li');
+        //click event가 들어왔을 때 click 의 target 의 class 를 순회 해서 해당 클래스의 버튼이 눌렸으면 
+        //해당 함수를 실행
         if(event.target.classList.contains('menu-edit-button')){
-            const modifiedName = prompt('메뉴 수정' , menuName.innerText);
-            menuName.innerText = modifiedName;
-            //console.log(event.target);
+            updateMenuName(event);
         }else if(event.target.classList.contains('menu-remove-button')){
-            if(confirm('정말 삭제 하시겠습니까?')){
-                menuTag.remove();
-                menuCounter();
-            }
+            removeMenuName(event);
         }
     })
 }
