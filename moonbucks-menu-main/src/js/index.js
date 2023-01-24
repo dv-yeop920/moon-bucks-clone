@@ -10,10 +10,10 @@ step 3 => 페이지 최초 접근시 최초 데이터 Read & Rendering
     [*] 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 읽어 온다
     [*] 에스프레소 메뉴를 페이지에 표시 해준다
 step 4 => 품절 상태 관리 
-    [] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
-    [] 품절 버튼을 추가 한다
-    [] 품절 ,수정 , 삭제 버튼을 클릭 하면 localStorage에 상태값이 저장 된다
-    [] 클릭 이벤트에서 가장 가까운 li 태그의 class 속성 값에 sold-out을 추가 한다
+    [*] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
+    [*] 품절 버튼을 추가 한다
+    [*] 품절 ,수정 , 삭제 버튼을 클릭 하면 localStorage에 상태값이 저장 된다
+    [*] 클릭 이벤트에서 가장 가까운 li 태그의 class 속성 값에 sold-out을 추가 한다
 품절 상태 메뉴의 마크업  */
 
 const setMenu = (menu) => {
@@ -72,8 +72,16 @@ let currentCategory = 'espresso';
         //data 라는건 html 마크업에 어떤 데이터를 저장하고 싶을때 쓰는 표준 속성 , 그 뒤는 개발자에 의도에 의해 필요한 것에 따라 명칭을 정할 수 있다.
         //지금은 id 값을 식별 하기 위해 menu-id 라고 이름을 설정 하고 배열의 index 값으로 아이디를 체크 한다
         return `
-        <li data-menu-id ="${index}" class="menu-list-item d-flex items-center py-2">
-        <span class="w-100 pl-2 menu-name">${menu}</span>
+        <li data-menu-id ="${index}" class = "menu-list-item d-flex items-center py-2">
+        <span class="w-100 pl-2 menu-name ${menu.soldOut ? "sold-out" : ''} ">
+        ${menu.name}
+        </span>
+        <button
+            type="button"
+            class="bg-gray-50 text-gray-500 text-sm mr-1 menu-sold-out-button"
+        >
+            ${menu.soldOut ? "품절 해제" : "품절" }
+        </button>
         <button
             type="button"
             class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
@@ -99,7 +107,7 @@ let currentCategory = 'espresso';
         }
         //위에 선언된 빈배열인 menu 에 인풋에 입력한 값을 푸쉬한다
         //메뉴를 객체로 바꿨으니 객체의 키에 접근해서 에스프레소 라는 키에 푸쉬 해준다
-        menu[currentCategory].push(userInputValue);
+        menu[currentCategory].push({name:userInputValue});
         render();
         setMenu(menu);//로컬로 menu 배열을 보내준다
         //리스트를 작성할 때 마다 espressoMenuList에 있는 <li> 노드의 갯수 즉 , length 를 불러와 변수에 할당 후 갯수를 카운트 해준다.
@@ -136,10 +144,20 @@ let currentCategory = 'espresso';
             menu[currentCategory].splice(menuId, 1);
             setMenu(menu);
             render();
-            console.log(menuId)
+            console.log(menuId);
             menuCounter();
             //menu 배열에 접근해 splice 로 삭제 버튼을 누른 해당 index 에 요소 를 지운다 그 후 setMenu로 로컬에 전달 한다
+            return;
         }
+    }
+
+    const soldOutMenuName = (event) => {
+        const menuId = event.target.closest('li').dataset.menuId;
+        console.log("여기")
+        menu[currentCategory][menuId].soldOut = menu[currentCategory][menuId].soldOut  === true ? false : true;
+        console.log(menu[currentCategory][menuId])
+        setMenu(menu);
+        render();
     }
 
     //Enter 키를 눌렀을 때 userInput 에 입력된 value 를 출력
@@ -158,9 +176,11 @@ let currentCategory = 'espresso';
         //click event가 들어왔을 때 click 의 target 의 class 를 순회 해서 해당 클래스의 버튼이 눌렸으면 
         //해당 함수를 실행
         if(event.target.classList.contains('menu-edit-button')){
-            updateMenuName(event);
+            return updateMenuName(event);
         }else if(event.target.classList.contains('menu-remove-button')){
-            removeMenuName(event);
+            return removeMenuName(event);
+        }else if(event.target.classList.contains('menu-sold-out-button')){
+            return soldOutMenuName(event);
         }
     });
 
