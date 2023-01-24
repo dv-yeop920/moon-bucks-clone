@@ -16,33 +16,40 @@ step 4 => 품절 상태 관리
     [] 클릭 이벤트에서 가장 가까운 li 태그의 class 속성 값에 sold-out을 추가 한다
 품절 상태 메뉴의 마크업  */
 
-
 const setMenu = (menu) => {
     localStorage.setItem('menu' , JSON.stringify(menu));
 }//로컬에 정보를 저장해주는  역할을 해준다 
 
-const getMenu = (menu) => {
-    localStorage.getItem('menu');
+
+const getMenu = () => {
+    return JSON.parse(localStorage.getItem('menu'));
 }
 
 
-const app = function() {
+function init(){
+    if(getMenu().length >= 1){
+        menu = getMenu();
+    }
+    render();
+}
+
     //html에 접근해서 태그들 변수에 할당 해서 쓰기
 const menuForm = document.querySelector('#espresso-menu-form');
 const userInput = document.querySelector('#espresso-menu-name');
 const userSubmitButton = document.querySelector('#espresso-menu-submit-button');
 const espressoMenuList = document.querySelector('#espresso-menu-list');
 
-
 const menuCount = document.querySelector('.menu-count');
 
-    const menu = [];//로컬과 화면에 표시해줄 정보를 담을 배열 선언(배열로 초기화 시켜주는 이유는 우리가 invalue를 어떤 데이터 형식으로 받아올지 모르기 때문에
-                    // 어떤 데이터 형식이든 배열에 push를 해줘서 다른 사람과 작업을 할 때 상태를 배열로 관리를 하는 구나 라는 의도를 알려주기 위해 )
+//console.log(getMenu());
+let menu = [];
+    //로컬과 화면에 표시해줄 정보를 담을 배열 선언(배열로 초기화 시켜주는 이유는 우리가 invalue를 어떤 데이터 형식으로 받아올지 모르기 때문에
+                    // 어떤 데이터 형식이든 배열에 push를 해줘서 다른 사람과 작업을 할 때 상태를 배열로 관리를 하는 구나 라는 의도를 알려주기 위해 
 
     //form 태그가 자동으로 전송 되는 것을 막아 준다
     menuForm.addEventListener('submit', (event) => {
         event.preventDefault();
-    })
+    });
     
     //수정 또는 삭제 했을 때 메뉴 갯수를 카운터 해주는 함수
     const menuCounter = () => {
@@ -50,38 +57,40 @@ const menuCount = document.querySelector('.menu-count');
         menuCount.innerText = `총 ${menuCounted}개`;
     }
 
+    const render = () => {
+        const template = menu.map((menu , index) => {
+        //menu 배열에 메뉴 하나당 객체 하나로 키값이 담긴다 그 배열의 키의 값을 화면에 출력 하고 로컬에 보내준다
+        //data 라는건 html 마크업에 어떤 데이터를 저장하고 싶을때 쓰는 표준 속성 , 그 뒤는 개발자에 의도에 의해 필요한 것에 따라 명칭을 정할 수 있다.
+        //지금은 id 값을 식별 하기 위해 menu-id 라고 이름을 설정 하고 배열의 index 값으로 아이디를 체크 한다
+        return `
+        <li data-menu-id ="${index}" class="menu-list-item d-flex items-center py-2">
+        <span class="w-100 pl-2 menu-name">${menu}</span>
+        <button
+            type="button"
+            class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
+        >
+            수정
+        </button>
+        <button
+            type="button"
+            class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
+        >
+            삭제
+        </button>
+        </li>`
+    }).join('');
+    espressoMenuList.innerHTML = template;//ul에 맵으로 맵핑해서 등록해준다 
+};//새로운 배열로 생성되는 map 의 배열을 스트링으로 풀어 준다
+
     //엔터나 클릭이 됐을 때 실행될 메뉴 리스트 내용을 담은 함수
     const addMenuList = () => {
         const userInputValue = userInput.value;
-        menu.push({name: userInputValue});//위에 선언된 빈배열인 menu 에 인풋에 입력한 값을 푸쉬한다
-        //메뉴 추가를 하고 로컬에 보내줄 
-        const template = menu.map((menu , index) => {
-            //menu 배열에 메뉴 하나당 객체 하나로 키값이 담긴다 그 배열의 키의 값을 화면에 출력 하고 로컬에 보내준다
-            //data 라는건 html 마크업에 어떤 데이터를 저장하고 싶을때 쓰는 표준 속성 , 그 뒤는 개발자에 의도에 의해 필요한 것에 따라 명칭을 정할 수 있다.
-            //지금은 id 값을 식별 하기 위해 menu-id 라고 이름을 설정 하고 배열의 index 값으로 아이디를 체크 한다
-            return `
-            <li data-menu-id = "${index}" class="menu-list-item d-flex items-center py-2">
-            <span class="w-100 pl-2 menu-name">${menu.name}</span>
-            <button
-                type="button"
-                class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button"
-            >
-                수정
-            </button>
-            <button
-                type="button"
-                class="bg-gray-50 text-gray-500 text-sm menu-remove-button"
-            >
-                삭제
-            </button>
-            </li>`
-        }).join('');//새로운 배열로 생성되는 map 의 배열을 스트링으로 풀어 준다
-        
-        //userinput이 '' 이면 경고창을 띄우고 return 으로 실행을 종료 시켜 빈칸의 리스트가 작성이 안되게 한다
-        if(userInputValue === ''){
+        if(userInput.value === ''){
             return alert('메뉴 이름을 작성해 주세요!');
         }
-        espressoMenuList.innerHTML = template;//ul에 맵으로 맵핑해서 등록해준다 
+        //위에 선언된 빈배열인 menu 에 인풋에 입력한 값을 푸쉬한다
+        menu.push(userInputValue);
+        render();
         setMenu(menu);//로컬로 menu 배열을 보내준다
         //리스트를 작성할 때 마다 espressoMenuList에 있는 <li> 노드의 갯수 즉 , length 를 불러와 변수에 할당 후 갯수를 카운트 해준다.
         menuCounter();
@@ -112,14 +121,14 @@ const menuCount = document.querySelector('.menu-count');
 
     const removeMenuName = (event) => {
         const menuId = event.target.closest('li').dataset.menuId;
-        const menuTag = event.target.closest('li');
 
         if(confirm('정말 삭제 하시겠습니까?')){
-            menuTag.remove();
+            menu.splice(menuId, 1);
+            setMenu(menu);
+            render();
+            console.log(menuId)
             menuCounter();
             //menu 배열에 접근해 splice 로 삭제 버튼을 누른 해당 index 에 요소 를 지운다 그 후 setMenu로 로컬에 전달 한다
-            menu.splice(menuId , 1);
-            setMenu(menu);
         }
     }
 
@@ -143,12 +152,9 @@ const menuCount = document.querySelector('.menu-count');
         }else if(event.target.classList.contains('menu-remove-button')){
             removeMenuName(event);
         }
-    })
-}
-
-app();
+    });
 
 
 
 
-
+init();
