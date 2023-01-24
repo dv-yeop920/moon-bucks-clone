@@ -3,12 +3,12 @@
 step 1 => Todo localstorage Read & Write
     [*] localStorage에 데이터를 저장한다
     [*] 추가 , 수정 , 삭제 버튼을 클릭 하면 localStorage에 상태값이 저장 된다
-    [] localStrage에 있는 데이터를 읽어 온다
+    [*] localStrage에 있는 데이터를 읽어 온다
 step 2 => 카테고리별 메뉴판 관리
-    [] 에스프레소, 프라푸치노, 블렌디드, 티바나, 디저트 각각의 종류별로 메뉴판을 관리할 수 있게 만든다.
+    [*] 에스프레소, 프라푸치노, 블렌디드, 티바나, 디저트 각각의 종류별로 메뉴판을 관리할 수 있게 만든다.
 step 3 => 페이지 최초 접근시 최초 데이터 Read & Rendering
-    [] 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 읽어 온다
-    [] 에스프레소 메뉴를 페이지에 표시 해준다
+    [*] 페이지에 최초로 접근할 때는 에스프레소 메뉴가 먼저 읽어 온다
+    [*] 에스프레소 메뉴를 페이지에 표시 해준다
 step 4 => 품절 상태 관리 
     [] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
     [] 품절 버튼을 추가 한다
@@ -27,10 +27,11 @@ const getMenu = () => {
 
 
 function init(){
-    if(getMenu().length >= 1){
+    if(getMenu()){
         menu = getMenu();
     }
     render();
+    menuCounter();
 }
 
     //html에 접근해서 태그들 변수에 할당 해서 쓰기
@@ -38,14 +39,22 @@ const menuForm = document.querySelector('#espresso-menu-form');
 const userInput = document.querySelector('#espresso-menu-name');
 const userSubmitButton = document.querySelector('#espresso-menu-submit-button');
 const espressoMenuList = document.querySelector('#espresso-menu-list');
+const navigationBar = document.querySelector('#nav');
 
 const menuCount = document.querySelector('.menu-count');
 
-//console.log(getMenu());
-let menu = [];
+//기존에 하나의 게시판만 관리 하면 돼서 배열로만 했지만 여러개의 카테고리를 관리 하기 위해 객체에 키 값 을 담는 형시으로 저장
+let menu = {
+    espresso: [],
+    frappuccino: [],
+    blended: [],
+    teavana: [],
+    desert: []
+};
+
+let currentCategory = 'espresso';
     //로컬과 화면에 표시해줄 정보를 담을 배열 선언(배열로 초기화 시켜주는 이유는 우리가 invalue를 어떤 데이터 형식으로 받아올지 모르기 때문에
                     // 어떤 데이터 형식이든 배열에 push를 해줘서 다른 사람과 작업을 할 때 상태를 배열로 관리를 하는 구나 라는 의도를 알려주기 위해 
-
     //form 태그가 자동으로 전송 되는 것을 막아 준다
     menuForm.addEventListener('submit', (event) => {
         event.preventDefault();
@@ -58,7 +67,7 @@ let menu = [];
     }
 
     const render = () => {
-        const template = menu.map((menu , index) => {
+        const template = menu[currentCategory].map((menu , index) => {
         //menu 배열에 메뉴 하나당 객체 하나로 키값이 담긴다 그 배열의 키의 값을 화면에 출력 하고 로컬에 보내준다
         //data 라는건 html 마크업에 어떤 데이터를 저장하고 싶을때 쓰는 표준 속성 , 그 뒤는 개발자에 의도에 의해 필요한 것에 따라 명칭을 정할 수 있다.
         //지금은 id 값을 식별 하기 위해 menu-id 라고 이름을 설정 하고 배열의 index 값으로 아이디를 체크 한다
@@ -89,7 +98,8 @@ let menu = [];
             return alert('메뉴 이름을 작성해 주세요!');
         }
         //위에 선언된 빈배열인 menu 에 인풋에 입력한 값을 푸쉬한다
-        menu.push(userInputValue);
+        //메뉴를 객체로 바꿨으니 객체의 키에 접근해서 에스프레소 라는 키에 푸쉬 해준다
+        menu[currentCategory].push(userInputValue);
         render();
         setMenu(menu);//로컬로 menu 배열을 보내준다
         //리스트를 작성할 때 마다 espressoMenuList에 있는 <li> 노드의 갯수 즉 , length 를 불러와 변수에 할당 후 갯수를 카운트 해준다.
@@ -109,7 +119,7 @@ let menu = [];
             if(modifiedName){
                 menuName.innerText = modifiedName;
                 //menuId 는 배열의 index 값과 동일하기 때문에 menu의 인덱스에 접근해 해당 name 키에 있는 값을 수정한 값으로 로컬에서 바꿔 준다.
-                menu[menuId].name = modifiedName;
+                menu[currentCategory][menuId] = modifiedName;
                 //바꿔준 값을 local 에 보내주면 바뀐다 
                 //데이터를 바꿔 줄때는 항상 최소한의 꼬이지 않게 깔끔하게 로직을 짠다 한번에 모든 함수에서 해결 하려 하지 말고 역할을 나눠 준다
                 setMenu(menu);
@@ -123,7 +133,7 @@ let menu = [];
         const menuId = event.target.closest('li').dataset.menuId;
 
         if(confirm('정말 삭제 하시겠습니까?')){
-            menu.splice(menuId, 1);
+            menu[currentCategory].splice(menuId, 1);
             setMenu(menu);
             render();
             console.log(menuId)
@@ -153,6 +163,20 @@ let menu = [];
             removeMenuName(event);
         }
     });
+
+    //네비게이션 바에 클릭 이벤트를 주어 카테고리 버튼을 누를때 발생 되는 이벤트 실행
+    navigationBar.addEventListener('click' , (event) => {
+        const categoryButton = event.target.classList.contains('cafe-category-name');
+        if(categoryButton) {
+            const categoryName = event.target.dataset.categoryName;
+            const categoryTitle = document.querySelector('#category-title');
+            currentCategory = categoryName;
+            categoryTitle.innerText = `${event.target.innerText} 메뉴 관리 `;
+            render();
+            menuCounter();
+        }
+    })
+
 
 
 
