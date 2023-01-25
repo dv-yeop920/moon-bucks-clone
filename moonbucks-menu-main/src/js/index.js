@@ -1,22 +1,22 @@
 
 /*
 step1 => Todo 서버 요청
-[] 웹 서버를 띄운다
-[] 서버에 새로운 메뉴가 추가될 수 있도록 요청 한다
-[] 서버에 카테고리별 메뉴리스트를 불러 온다
+[*] 웹 서버를 띄운다
+[*] 서버에 새로운 메뉴가 추가될 수 있도록 요청 한다
+[*] 서버에 카테고리별 메뉴리스트를 불러 온다
 [] 서버에 메뉴가 수정될 수 있도록 요청 한다
 [] 서버에 메뉴가 삭제될 수 있도록 요청 한다
 [] 서버에 메뉴 상태가 토글될 수 있도록 요청 한다  
 
 step2 => Todo 리팩토링
-[] localstorage 에 저장하는 로직들은 지운다
-[] fetch 비동기 api를 사용 하는 부분을 async , await 를 사용하여 구현 한다
+[*] localstorage 에 저장하는 로직들은 지운다
+[*] fetch 비동기 api를 사용 하는 부분을 async , await 를 사용하여 구현 한다
 
 step3 => Todot 사용자 경험
 [] api 통신이 실패하는 경우에 대해 사용자가 알 수 있게 alert 로 예외 처리를 한다
-[] 중복 되는 메뉴는 추가할 필요가 없다.
+[] 중복 되는 메뉴는 추가할수 없게 막는다
 */
-
+const BASE_URL = 'http://localhost:3000/api';
 
     //html에 접근해서 태그들 변수에 할당 해서 쓰기
     const menuForm = document.querySelector('#espresso-menu-form');
@@ -39,22 +39,43 @@ let menu = {
 //메뉴의 키에 접근할 때 쓸 변수 선언 , 기본값은 첫 페이지인 espresso , 다른 카테고리에 접근할 때 마다 값을 변경하여 해당 카테고리에 접근할 수있게 let 으로 선언
 let currentCategory = 'espresso';
 
-const setMenu = (menu) => {
+/*const //setMenu = (menu) => {
     localStorage.setItem('menu' , JSON.stringify(menu));
 }//로컬에 정보를 저장해주는  역할을 해준다 
 
 
-const getMenu = () => {
+const //getMenu = () => {
     return JSON.parse(localStorage.getItem('menu'));
-}
-
-
-function init(){
-    if(getMenu()){
-        menu = getMenu();
+}*/
+const MenuApi = {
+    async getAllMenuByCategory(category){
+        const response = await fetch(`${BASE_URL}/category/${category}/menu`);
+        return response.json();
+    },
+    async creatMenu(category , menuName){
+        const request = await fetch(`${BASE_URL}/category/${category}/menu`,{
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({name: menuName})
+    })
+    if(!request.ok){
+        console.error('에러 발생');
     }
-    render();
+    }
 }
+
+const init = async () => {
+    menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
+    render();
+    userInput.value = '';
+};
+    /*if(//getMenu()){
+        menu = //getMenu();
+    }
+    render();*/
+
 
     //form 태그가 자동으로 전송 되는 것을 막아 준다
     menuForm.addEventListener('submit', (event) => {
@@ -102,17 +123,20 @@ function init(){
 };//새로운 배열로 생성되는 map 의 배열을 스트링으로 풀어 준다
 
     //엔터나 클릭이 됐을 때 실행될 메뉴 리스트 내용을 담은 함수
-    const addMenuList = () => {
+    const addMenuList = async () => {
         const userInputValue = userInput.value;
         if(userInput.value === ''){
             return alert('메뉴 이름을 작성해 주세요!');
         }
         //위에 선언된 빈배열인 menu 에 인풋에 입력한 값을 푸쉬한다
         //메뉴를 객체로 바꿨으니 객체의 키에 접근해서 에스프레소 라는 키에 푸쉬 해준다
-        menu[currentCategory].push({name:userInputValue});
+        //menu[currentCategory].push({name:userInputValue});
+        //위에서 선언한 함수 메소드에 인자를 보내주어 요청을 하고 응답을 받아 render 를 실행 시켜 메뉴를 추가 한다
+        await MenuApi.creatMenu(currentCategory , userInputValue);
+        menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
         render();
-        setMenu(menu);//로컬로 menu 배열을 보내준다
         userInput.value = '';
+        //setMenu(menu);
     }
     
     const updateMenuName = (event) => {
@@ -129,7 +153,7 @@ function init(){
                 //바꿔준 값을 local 에 보내주면 바뀐다 
                 //데이터를 바꿔 줄때는 항상 최소한의 꼬이지 않게 깔끔하게 로직을 짠다 한번에 모든 함수에서 해결 하려 하지 말고 역할을 나눠 준다
                 render();
-                setMenu(menu);
+                //setMenu(menu);
             }else{
                 menuName.innerText = menuName.innerText;
             }
@@ -142,7 +166,7 @@ function init(){
         if(confirm('정말 삭제 하시겠습니까?')){
             menu[currentCategory].splice(menuId, 1);
             render();
-            setMenu(menu);
+            //setMenu(menu);
             console.log(menuId);
             //menu 배열에 접근해 splice 로 삭제 버튼을 누른 해당 index 에 요소 를 지운다 그 후 setMenu로 로컬에 전달 한다
             return;
@@ -154,7 +178,7 @@ function init(){
         menu[currentCategory][menuId].soldOut = menu[currentCategory][menuId].soldOut  === true ? false : true;
         console.log(menu[currentCategory][menuId]);
         render();
-        setMenu(menu);
+        //setMenu(menu);
     }
 
     //Enter 키를 눌렀을 때 userInput 에 입력된 value 를 출력
@@ -182,13 +206,15 @@ function init(){
     });
 
     //네비게이션 바에 클릭 이벤트를 주어 카테고리 버튼을 누를때 발생 되는 이벤트 실행
-    navigationBar.addEventListener('click' , (event) => {
+    navigationBar.addEventListener('click' , async (event) => {
         const categoryButton = event.target.classList.contains('cafe-category-name');
         if(categoryButton) {
             const categoryName = event.target.dataset.categoryName;
             const categoryTitle = document.querySelector('#category-title');
             currentCategory = categoryName;
             categoryTitle.innerText = `${event.target.innerText} 메뉴 관리 `;
+            //서버에 보내진 데이터를 받아서 메뉴의 요소에 담아서 렌더 해준다
+            menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
             render();
         }
     })
