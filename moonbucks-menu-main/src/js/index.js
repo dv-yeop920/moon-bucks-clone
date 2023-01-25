@@ -1,4 +1,23 @@
 
+/*
+step1 => Todo 서버 요청
+[] 웹 서버를 띄운다
+[] 서버에 새로운 메뉴가 추가될 수 있도록 요청 한다
+[] 서버에 카테고리별 메뉴리스트를 불러 온다
+[] 서버에 메뉴가 수정될 수 있도록 요청 한다
+[] 서버에 메뉴가 삭제될 수 있도록 요청 한다
+[] 서버에 메뉴 상태가 토글될 수 있도록 요청 한다  
+
+step2 => Todo 리팩토링
+[] localstorage 에 저장하는 로직들은 지운다
+[] fetch 비동기 api를 사용 하는 부분을 async , await 를 사용하여 구현 한다
+
+step3 => Todot 사용자 경험
+[] api 통신이 실패하는 경우에 대해 사용자가 알 수 있게 alert 로 예외 처리를 한다
+[] 중복 되는 메뉴는 추가할 필요가 없다.
+*/
+
+
     //html에 접근해서 태그들 변수에 할당 해서 쓰기
     const menuForm = document.querySelector('#espresso-menu-form');
     const userInput = document.querySelector('#espresso-menu-name');
