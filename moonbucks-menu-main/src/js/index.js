@@ -16,7 +16,8 @@ step3 => Todot 사용자 경험
 [] api 통신이 실패하는 경우에 대해 사용자가 알 수 있게 alert 로 예외 처리를 한다
 [] 중복 되는 메뉴는 추가할수 없게 막는다
 */
-const BASE_URL = 'http://localhost:3000/api';
+import MenuApi from './server/server.js';
+
 
     //html에 접근해서 태그들 변수에 할당 해서 쓰기
     const menuForm = document.querySelector('#espresso-menu-form');
@@ -27,7 +28,6 @@ const BASE_URL = 'http://localhost:3000/api';
     const menuCount = document.querySelector('.menu-count');
 
     //로컬과 화면에 표시해줄 정보를 담을 배열 선언(배열로 초기화 시켜주는 이유는 우리가 invalue를 어떤 데이터 형식으로 받아올지 모르기 때문에
-    // 어떤 데이터 형식이든 배열에 push를 해줘서 다른 사람과 작업을 할 때 상태를 배열로 관리를 하는 구나 라는 의도를 알려주기 위해 
     //기존에 하나의 게시판만 관리 하면 돼서 배열로만 했지만 여러개의 카테고리를 관리 하기 위해 객체에 키 값 을 담는 형시으로 저장
 let menu = {
     espresso: [],
@@ -39,73 +39,22 @@ let menu = {
 //메뉴의 키에 접근할 때 쓸 변수 선언 , 기본값은 첫 페이지인 espresso , 다른 카테고리에 접근할 때 마다 값을 변경하여 해당 카테고리에 접근할 수있게 let 으로 선언
 let currentCategory = 'espresso';
 
-/*const //setMenu = (menu) => {
+/*로컬용 로직const //setMenu = (menu) => {
     localStorage.setItem('menu' , JSON.stringify(menu));
-}//로컬에 정보를 저장해주는  역할을 해준다 
-
-
+}
 const //getMenu = () => {
     return JSON.parse(localStorage.getItem('menu'));
 }*/
-const MenuApi = {
-    async getAllMenuByCategory(category){
-        const response = await fetch(`${BASE_URL}/category/${category}/menu`);
-        return response.json();
-    },
-    async creatMenu(category , menuName){
-        const request = await fetch(`${BASE_URL}/category/${category}/menu`,{
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({name: menuName})
-    });
-    if(!request.ok){
-        console.error('에러 발생');
-        alert('중복된 메뉴 입니다ㅜㅜ');
-    }
-    },
-    async modifieMenudName(category , modifiedmenuName , menuId){
-        const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}` , {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({name: modifiedmenuName})
-        });
-        if(!response.ok){
-            console.error('에러 발생');
-        }
-        return response.json();
-    },
-    async deleteMenuName(category , menuId){
-        const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}` , {
-            method: 'DELETE',
-        });
-        if(!response.ok){
-            console.error('에러 발생');
-        }
-    },
-    async toggleSoldOutMenu(category , menuId){
-        const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}/soldOut` , {
-            method: 'PUT',
-        });
-        if(!response.ok){
-            console.error('에러 발생');
-        }
-    }
-}
 
 const init = async () => {
     menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
     render();
     userInput.value = '';
-};
-    /*if(//getMenu()){
+    /*로컬용 로직if(//getMenu()){
         menu = //getMenu();
     }
     render();*/
-
+};
 
     //form 태그가 자동으로 전송 되는 것을 막아 준다
     menuForm.addEventListener('submit', (event) => {
