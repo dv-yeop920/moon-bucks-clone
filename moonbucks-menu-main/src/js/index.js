@@ -4,9 +4,9 @@ step1 => Todo 서버 요청
 [*] 웹 서버를 띄운다
 [*] 서버에 새로운 메뉴가 추가될 수 있도록 요청 한다
 [*] 서버에 카테고리별 메뉴리스트를 불러 온다
-[] 서버에 메뉴가 수정될 수 있도록 요청 한다
-[] 서버에 메뉴가 삭제될 수 있도록 요청 한다
-[] 서버에 메뉴 상태가 토글될 수 있도록 요청 한다  
+[*] 서버에 메뉴가 수정될 수 있도록 요청 한다
+[*] 서버에 메뉴가 삭제될 수 있도록 요청 한다
+[*] 서버에 메뉴 상태가 토글될 수 있도록 요청 한다  
 
 step2 => Todo 리팩토링
 [*] localstorage 에 저장하는 로직들은 지운다
@@ -59,10 +59,40 @@ const MenuApi = {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({name: menuName})
-    })
+    });
     if(!request.ok){
         console.error('에러 발생');
+        alert('중복된 메뉴 입니다ㅜㅜ');
     }
+    },
+    async modifieMenudName(category , modifiedmenuName , menuId){
+        const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}` , {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({name: modifiedmenuName})
+        });
+        if(!response.ok){
+            console.error('에러 발생');
+        }
+        return response.json();
+    },
+    async deleteMenuName(category , menuId){
+        const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}` , {
+            method: 'DELETE',
+        });
+        if(!response.ok){
+            console.error('에러 발생');
+        }
+    },
+    async toggleSoldOutMenu(category , menuId){
+        const response = await fetch(`${BASE_URL}/category/${category}/menu/${menuId}/soldOut` , {
+            method: 'PUT',
+        });
+        if(!response.ok){
+            console.error('에러 발생');
+        }
     }
 }
 
@@ -92,17 +122,17 @@ const init = async () => {
         const template = menu[currentCategory].map((menu , index) => {
         //menu 배열에 메뉴 하나당 객체 하나로 키값이 담긴다 그 배열의 키의 값을 화면에 출력 하고 로컬에 보내준다
         //data 라는건 html 마크업에 어떤 데이터를 저장하고 싶을때 쓰는 표준 속성 , 그 뒤는 개발자에 의도에 의해 필요한 것에 따라 명칭을 정할 수 있다.
-        //지금은 id 값을 식별 하기 위해 menu-id 라고 이름을 설정 하고 배열의 index 값으로 아이디를 체크 한다
+        //서버에서 보내준 메뉴의 아이디를 입력 받아 수정 삭제 수정에서 사용 한다
         return `
-        <li data-menu-id ="${index}" class = "menu-list-item d-flex items-center py-2">
-        <span class="w-100 pl-2 menu-name ${menu.soldOut ? "sold-out" : ''} ">
+        <li data-menu-id ="${menu.id}" class = "menu-list-item d-flex items-center py-2">
+        <span class="w-100 pl-2 menu-name ${menu.isSoldOut ? "sold-out" : ''} ">
         ${menu.name}
         </span>
         <button
             type="button"
             class="bg-gray-50 text-gray-500 text-sm mr-1 menu-sold-out-button"
         >
-            ${menu.soldOut ? "품절 해제" : "품절" }
+            ${menu.isSoldOut ? "품절 해제" : "품절" }
         </button>
         <button
             type="button"
@@ -139,7 +169,7 @@ const init = async () => {
         //setMenu(menu);
     }
     
-    const updateMenuName = (event) => {
+    const updateMenuName = async (event) => {
         //위에 설정해 놓은 data 값을 dataset 이라는 속성으로 활용할 수 있다 . 뒤에는 설정해 놓은 이름 menu-id 를 함수명 작성 하듯이 적어 준다
         const menuId = event.target.closest('li').dataset.menuId;
         const menuName = event.target.closest('li').querySelector('.menu-name');
@@ -149,8 +179,9 @@ const init = async () => {
 
             if(modifiedName){
                 //menuId 는 배열의 index 값과 동일하기 때문에 menu의 인덱스에 접근해 해당 name 키에 있는 값을 수정한 값으로 로컬에서 바꿔 준다.
-                menu[currentCategory][menuId] = {name: modifiedName};
-                //바꿔준 값을 local 에 보내주면 바뀐다 
+                //menu[currentCategory][menuId] = {name: modifiedName};
+                await MenuApi.modifieMenudName(currentCategory , modifiedName , menuId);
+                menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
                 //데이터를 바꿔 줄때는 항상 최소한의 꼬이지 않게 깔끔하게 로직을 짠다 한번에 모든 함수에서 해결 하려 하지 말고 역할을 나눠 준다
                 render();
                 //setMenu(menu);
@@ -160,24 +191,25 @@ const init = async () => {
         }
     }
 
-    const removeMenuName = (event) => {
+    const removeMenuName = async (event) => {
         const menuId = event.target.closest('li').dataset.menuId;
 
         if(confirm('정말 삭제 하시겠습니까?')){
-            menu[currentCategory].splice(menuId, 1);
+            await MenuApi.deleteMenuName(currentCategory , menuId);
+            menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
             render();
             //setMenu(menu);
-            console.log(menuId);
-            //menu 배열에 접근해 splice 로 삭제 버튼을 누른 해당 index 에 요소 를 지운다 그 후 setMenu로 로컬에 전달 한다
             return;
         }
     }
 
-    const soldOutMenuName = (event) => {
+    const soldOutMenuName = async (event) => {
         const menuId = event.target.closest('li').dataset.menuId;
-        menu[currentCategory][menuId].soldOut = menu[currentCategory][menuId].soldOut  === true ? false : true;
-        console.log(menu[currentCategory][menuId]);
+        await MenuApi.toggleSoldOutMenu(currentCategory , menuId);
+        menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
         render();
+        
+        //menu[currentCategory][menuId].soldOut = menu[currentCategory][menuId].soldOut  === true ? false : true;
         //setMenu(menu);
     }
 
