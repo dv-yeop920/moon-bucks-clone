@@ -1,25 +1,7 @@
 
-/*
-step1 => Todo 서버 요청
-[*] 웹 서버를 띄운다
-[*] 서버에 새로운 메뉴가 추가될 수 있도록 요청 한다
-[*] 서버에 카테고리별 메뉴리스트를 불러 온다
-[*] 서버에 메뉴가 수정될 수 있도록 요청 한다
-[*] 서버에 메뉴가 삭제될 수 있도록 요청 한다
-[*] 서버에 메뉴 상태가 토글될 수 있도록 요청 한다  
-
-step2 => Todo 리팩토링
-[*] localstorage 에 저장하는 로직들은 지운다
-[*] fetch 비동기 api를 사용 하는 부분을 async , await 를 사용하여 구현 한다
-
-step3 => Todot 사용자 경험
-[] api 통신이 실패하는 경우에 대해 사용자가 알 수 있게 alert 로 예외 처리를 한다
-[] 중복 되는 메뉴는 추가할수 없게 막는다
-*/
 import MenuApi from './server/server.js';
 
-
-    //html에 접근해서 태그들 변수에 할당 해서 쓰기
+   //html에 접근해서 태그들 변수에 할당 해서 쓰기
     const menuForm = document.querySelector('#espresso-menu-form');
     const userInput = document.querySelector('#espresso-menu-name');
     const userSubmitButton = document.querySelector('#espresso-menu-submit-button');
@@ -28,7 +10,7 @@ import MenuApi from './server/server.js';
     const menuCount = document.querySelector('.menu-count');
 
     //로컬과 화면에 표시해줄 정보를 담을 배열 선언(배열로 초기화 시켜주는 이유는 우리가 invalue를 어떤 데이터 형식으로 받아올지 모르기 때문에
-    //기존에 하나의 게시판만 관리 하면 돼서 배열로만 했지만 여러개의 카테고리를 관리 하기 위해 객체에 키 값 을 담는 형시으로 저장
+    //기존에 하나의 게시판만 관리 하면 돼서 배열로만 했지만 여러개의 카테고리를 관리 하기 위해 객체에 키 값 을 담는 형식으로 저장
 let menu = {
     espresso: [],
     frappuccino: [],
@@ -39,36 +21,15 @@ let menu = {
 //메뉴의 키에 접근할 때 쓸 변수 선언 , 기본값은 첫 페이지인 espresso , 다른 카테고리에 접근할 때 마다 값을 변경하여 해당 카테고리에 접근할 수있게 let 으로 선언
 let currentCategory = 'espresso';
 
-/*로컬용 로직const //setMenu = (menu) => {
-    localStorage.setItem('menu' , JSON.stringify(menu));
-}
-const //getMenu = () => {
-    return JSON.parse(localStorage.getItem('menu'));
-}*/
-
-const init = async () => {
-    menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
-    render();
-    userInput.value = '';
-    /*로컬용 로직if(//getMenu()){
-        menu = //getMenu();
-    }
-    render();*/
-};
-
-    //form 태그가 자동으로 전송 되는 것을 막아 준다
-    menuForm.addEventListener('submit', (event) => {
-        event.preventDefault();
-    });
-    
     //수정 또는 삭제 했을 때 메뉴 갯수를 카운터 해주는 함수
     const menuCounter = () => {
         const menuCounted = menu[currentCategory].length;
         menuCount.innerText = `총 ${menuCounted}개`;
     }
 
-    const render = () => {
-        const template = menu[currentCategory].map((menu , index) => {
+    const render = async () => {
+        menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
+        const template = menu[currentCategory].map((menu) => {
         //menu 배열에 메뉴 하나당 객체 하나로 키값이 담긴다 그 배열의 키의 값을 화면에 출력 하고 로컬에 보내준다
         //data 라는건 html 마크업에 어떤 데이터를 저장하고 싶을때 쓰는 표준 속성 , 그 뒤는 개발자에 의도에 의해 필요한 것에 따라 명칭을 정할 수 있다.
         //서버에서 보내준 메뉴의 아이디를 입력 받아 수정 삭제 수정에서 사용 한다
@@ -106,16 +67,18 @@ const init = async () => {
         const userInputValue = userInput.value;
         if(userInput.value === ''){
             return alert('메뉴 이름을 작성해 주세요!');
+        }else if(userInput.value.length < 2){
+            alert('두글자 이상 입력해 주세요!');
         }
-        //위에 선언된 빈배열인 menu 에 인풋에 입력한 값을 푸쉬한다
-        //메뉴를 객체로 바꿨으니 객체의 키에 접근해서 에스프레소 라는 키에 푸쉬 해준다
-        //menu[currentCategory].push({name:userInputValue});
+        const duplicatiedValue = 
+        menu[currentCategory].find((item) => item.name === userInputValue);
+        if(duplicatiedValue){
+            alert('중복된 메뉴 에요 ㅠㅠ');
+        }
         //위에서 선언한 함수 메소드에 인자를 보내주어 요청을 하고 응답을 받아 render 를 실행 시켜 메뉴를 추가 한다
         await MenuApi.creatMenu(currentCategory , userInputValue);
-        menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
         render();
         userInput.value = '';
-        //setMenu(menu);
     }
     
     const updateMenuName = async (event) => {
@@ -128,12 +91,8 @@ const init = async () => {
 
             if(modifiedName){
                 //menuId 는 배열의 index 값과 동일하기 때문에 menu의 인덱스에 접근해 해당 name 키에 있는 값을 수정한 값으로 로컬에서 바꿔 준다.
-                //menu[currentCategory][menuId] = {name: modifiedName};
                 await MenuApi.modifieMenudName(currentCategory , modifiedName , menuId);
-                menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
-                //데이터를 바꿔 줄때는 항상 최소한의 꼬이지 않게 깔끔하게 로직을 짠다 한번에 모든 함수에서 해결 하려 하지 말고 역할을 나눠 준다
                 render();
-                //setMenu(menu);
             }else{
                 menuName.innerText = menuName.innerText;
             }
@@ -145,9 +104,7 @@ const init = async () => {
 
         if(confirm('정말 삭제 하시겠습니까?')){
             await MenuApi.deleteMenuName(currentCategory , menuId);
-            menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
             render();
-            //setMenu(menu);
             return;
         }
     }
@@ -155,12 +112,25 @@ const init = async () => {
     const soldOutMenuName = async (event) => {
         const menuId = event.target.closest('li').dataset.menuId;
         await MenuApi.toggleSoldOutMenu(currentCategory , menuId);
-        menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
         render();
-        
-        //menu[currentCategory][menuId].soldOut = menu[currentCategory][menuId].soldOut  === true ? false : true;
-        //setMenu(menu);
     }
+
+    const changeCategory =  (event) => {
+        const categoryButton = event.target.classList.contains('cafe-category-name');
+        if(categoryButton) {
+            const categoryName = event.target.dataset.categoryName;
+            const categoryTitle = document.querySelector('#category-title');
+            currentCategory = categoryName;
+            categoryTitle.innerText = `${event.target.innerText} 메뉴 관리 `;
+            //서버에 보내진 데이터를 받아서 메뉴의 요소에 담아서 렌더 해준다
+            render();
+        }
+    }
+    
+    const init = async () => {
+        render();
+        userInput.value = '';
+    };
 
     //Enter 키를 눌렀을 때 userInput 에 입력된 value 를 출력
     userInput.addEventListener('keypress' , (event) => {
@@ -175,8 +145,7 @@ const init = async () => {
     
     //메뉴 이름 수정,삭제 하는 함수 . 이벤트 위임을 통해 수정.삭제 버튼 기능 구현
     espressoMenuList.addEventListener('click' , (event) => {
-        //click event가 들어왔을 때 click 의 target 의 class 를 순회 해서 해당 클래스의 버튼이 눌렸으면 
-        //해당 함수를 실행
+        //click event가 들어왔을 때 click 의 target 의 class 를 순회 해서 해당 클래스의 버튼이 눌렸으면 해당 함수를 실행
         if(event.target.classList.contains('menu-edit-button')){
             return updateMenuName(event);
         }else if(event.target.classList.contains('menu-remove-button')){
@@ -187,18 +156,12 @@ const init = async () => {
     });
 
     //네비게이션 바에 클릭 이벤트를 주어 카테고리 버튼을 누를때 발생 되는 이벤트 실행
-    navigationBar.addEventListener('click' , async (event) => {
-        const categoryButton = event.target.classList.contains('cafe-category-name');
-        if(categoryButton) {
-            const categoryName = event.target.dataset.categoryName;
-            const categoryTitle = document.querySelector('#category-title');
-            currentCategory = categoryName;
-            categoryTitle.innerText = `${event.target.innerText} 메뉴 관리 `;
-            //서버에 보내진 데이터를 받아서 메뉴의 요소에 담아서 렌더 해준다
-            menu[currentCategory] = await MenuApi.getAllMenuByCategory(currentCategory);
-            render();
-        }
-    })
+    navigationBar.addEventListener('click' , changeCategory);
 
+
+    //form 태그가 자동으로 전송 되는 것을 막아 준다
+    menuForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+    });
 
 init();
